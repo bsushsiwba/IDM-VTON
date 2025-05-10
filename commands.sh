@@ -26,3 +26,6 @@ conda env create -f environment.yaml
 conda activate idm
 
 pip install huggingface_hub==0.25.1
+pip install pydantic==2.8.2
+pip install pydantic-core==2.20.1
+pip install fastapi==0.112.4
