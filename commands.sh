@@ -1,3 +1,6 @@
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
+
 cd ckpt
 cd densepose
 rm model_final_162be9.pkl
@@ -18,9 +21,6 @@ wget https://huggingface.co/spaces/yisol/IDM-VTON/resolve/main/ckpt/openpose/ckp
 cd ..
 cd ..
 cd ..
-
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-bash Miniconda3-latest-Linux-x86_64.sh
 
 conda env create -f environment.yaml
 conda activate idm
