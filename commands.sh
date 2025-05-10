@@ -18,3 +18,11 @@ wget https://huggingface.co/spaces/yisol/IDM-VTON/resolve/main/ckpt/openpose/ckp
 cd ..
 cd ..
 cd ..
+
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
+
+conda env create -f environment.yaml
+conda activate idm
+
+pip install huggingface_hub==0.25.1
