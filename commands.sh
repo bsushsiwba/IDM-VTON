@@ -17,3 +17,4 @@ rm body_pose_model.pth
 wget https://huggingface.co/spaces/yisol/IDM-VTON/resolve/main/ckpt/openpose/ckpts/body_pose_model.pth
 cd ..
 cd ..
+cd ..
