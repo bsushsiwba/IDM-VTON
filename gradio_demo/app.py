@@ -39,7 +39,7 @@ def pil_to_binary_mask(pil_image, threshold=0):
     binary_mask = np.array(grayscale_image) > threshold
     mask = np.zeros(binary_mask.shape, dtype=np.uint8)
     for i in range(binary_mask.shape[0]):
-        for j in range(binary_mask.shape[1]):
+        for j in binary_mask.shape[1]:
             if binary_mask[i, j] == True:
                 mask[i, j] = 1
     mask = (mask * 255).astype(np.uint8)
@@ -315,16 +315,11 @@ with image_blocks as demo:
                 label="Human. Mask with pen or use auto-masking",
                 interactive=True,
             )
-            with gr.Row():
-                is_checked = gr.Checkbox(
-                    label="Yes",
-                    info="Use auto-generated mask (Takes 5 seconds)",
-                    value=True,
-                )
-            with gr.Row():
-                is_checked_crop = gr.Checkbox(
-                    label="Yes", info="Use auto-crop & resizing", value=False
-                )
+            is_checked = gr.State(value=True)  # Hidden state variable
+            is_checked_crop = gr.State(value=False)  # Hidden state variable
+            # Hidden advanced settings
+            denoise_steps = gr.State(value=30)
+            seed = gr.State(value=42)
             with gr.Row():
                 body_part = gr.Dropdown(
                     choices=["upper_body", "lower_body", "dresses"],
@@ -364,14 +359,6 @@ with image_blocks as demo:
 
     with gr.Column():
         try_button = gr.Button(value="Try-on")
-        with gr.Accordion(label="Advanced Settings", open=False):
-            with gr.Row():
-                denoise_steps = gr.Number(
-                    label="Denoising Steps", minimum=20, maximum=40, value=30, step=1
-                )
-                seed = gr.Number(
-                    label="Seed", minimum=-1, maximum=2147483647, step=1, value=42
-                )
 
     try_button.click(
         fn=start_tryon,
