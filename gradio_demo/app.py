@@ -322,6 +322,10 @@ with image_blocks as demo:
                     value=True,
                 )
             with gr.Row():
+                is_checked_crop = gr.Checkbox(
+                    label="Yes", info="Use auto-crop & resizing", value=False
+                )
+            with gr.Row():
                 body_part = gr.Dropdown(
                     choices=["upper_body", "lower_body", "dresses"],
                     value="upper_body",
@@ -335,6 +339,13 @@ with image_blocks as demo:
 
         with gr.Column():
             garm_img = gr.Image(label="Garment", sources="upload", type="pil")
+            with gr.Row(elem_id="prompt-container"):
+                with gr.Row():
+                    prompt = gr.Textbox(
+                        placeholder="Description of garment ex) Short Sleeve Round Neck T-shirts",
+                        show_label=False,
+                        elem_id="prompt",
+                    )
             example = gr.Examples(
                 inputs=garm_img, examples_per_page=8, examples=garm_list_path
             )
@@ -353,6 +364,14 @@ with image_blocks as demo:
 
     with gr.Column():
         try_button = gr.Button(value="Try-on")
+        with gr.Accordion(label="Advanced Settings", open=False):
+            with gr.Row():
+                denoise_steps = gr.Number(
+                    label="Denoising Steps", minimum=20, maximum=40, value=30, step=1
+                )
+                seed = gr.Number(
+                    label="Seed", minimum=-1, maximum=2147483647, step=1, value=42
+                )
 
     try_button.click(
         fn=start_tryon,
