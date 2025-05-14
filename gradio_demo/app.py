@@ -29,6 +29,7 @@ from detectron2.data.detection_utils import (
     _apply_exif_orientation,
 )
 from torchvision.transforms.functional import to_pil_image
+from utils.resize import resize_and_center
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
@@ -145,8 +146,10 @@ def start_tryon(
     pipe.to(device)
     pipe.unet_encoder.to(device)
 
-    garm_img = garm_img.convert("RGB").resize((768, 1024))
-    human_img_orig = dict["background"].convert("RGB")
+    garm_img = resize_and_center(garm_img, 768, 1024)
+    garm_img = garm_img.convert("RGB")
+    human_img_orig = resize_and_center(dict["background"], 768, 1024)
+    human_img_orig = human_img_orig.convert("RGB")
 
     if is_checked_crop:
         width, height = human_img_orig.size
