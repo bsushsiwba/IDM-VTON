@@ -192,6 +192,16 @@ def start_tryon(
         mask, mask_gray = get_mask_location(
             "hd", selected_body_part, model_parse, keypoints
         )
+        # if selected upper body then subtract lower mask form upper
+        if selected_body_part == "upper_body":
+            mask_b, _ = get_mask_location("hd", "lower_body", model_parse, keypoints)
+            mask = Image.fromarray(
+                np.clip(
+                    np.array(mask, dtype=np.uint8) - np.array(mask_b, dtype=np.uint8),
+                    0,
+                    255,
+                ).astype(np.uint8)
+            )
         mask = mask.resize((768, 1024))
     else:
         mask = pil_to_binary_mask(dict["layers"][0].convert("RGB").resize((768, 1024)))
