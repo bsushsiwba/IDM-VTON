@@ -29,6 +29,7 @@ from detectron2.data.detection_utils import (
     _apply_exif_orientation,
 )
 from torchvision.transforms.functional import to_pil_image
+import time
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
@@ -146,6 +147,29 @@ def start_tryon(
     pipe.unet_encoder.to(device)
 
     garm_img = garm_img.convert("RGB").resize((768, 1024))
+
+    # save garment image
+    garm_img.save("garment.png")
+
+    if os.path.exists("complete.txt"):
+        os.remove("complete.txt")
+
+    with open("process.txt", "w") as f:
+        f.write("1")
+
+    # wait while complete.txt is not created
+    while not os.path.exists("complete.txt"):
+        time.sleep(0.1)
+
+    # read cloth_u.png as garm_img
+    garm_img = Image.open("cloth_u.png").convert("RGB")
+
+    # if lower body is selected, read cloth_b.png as garm_img
+    if selected_body_part == "lower_body":
+        garm_img = Image.open("cloth_b.png").convert("RGB")
+
+    garm_img = garm_img.resize((768, 1024))
+
     human_img_orig = dict["background"].convert("RGB")
 
     if is_checked_crop:
