@@ -33,12 +33,26 @@ def apply_mask_and_save(mask, ref_image, output_name):
 
 def samutils_segment(base_model):
     try:
-        # delete all png files in directory except ref_image.png
+        # delete all png files in directory except garment.png and human.png
         for file in os.listdir("."):
             if file not in [
                 "garment.png",
+                "human.png",
             ] and file.endswith(".png"):
                 os.remove(file)
+
+        # saving the source image's bottom mask
+        img = Image.open("human.png")
+        results = base_model.predict(img)
+        mask_b = None
+        # asigning mask
+        try:
+            mask_b = Image.fromarray(results.mask[2])
+        except:
+            pass
+
+        if mask_b is not None:
+            mask_b.save("mask_b.png")
 
         # read the image and remove background
         img = Image.open("garment.png")

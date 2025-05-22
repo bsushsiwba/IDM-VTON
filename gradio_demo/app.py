@@ -147,9 +147,25 @@ def start_tryon(
     pipe.unet_encoder.to(device)
 
     garm_img = garm_img.convert("RGB").resize((768, 1024))
+    human_img_orig = dict["background"].convert("RGB")
 
-    # save garment image
+    if is_checked_crop:
+        width, height = human_img_orig.size
+        target_width = int(min(width, height * (3 / 4)))
+        target_height = int(min(height, width * (4 / 3)))
+        left = (width - target_width) / 2
+        top = (height - target_height) / 2
+        right = (width + target_width) / 2
+        bottom = (height + target_height) / 2
+        cropped_img = human_img_orig.crop((left, top, right, bottom))
+        crop_size = cropped_img.size
+        human_img = cropped_img.resize((768, 1024))
+    else:
+        human_img = human_img_orig.resize((768, 1024))
+
+    # save garment and human image
     garm_img.save("garment.png")
+    human_img.save("human.png")
 
     if os.path.exists("complete.txt"):
         os.remove("complete.txt")
@@ -167,24 +183,14 @@ def start_tryon(
     # if lower body is selected, read cloth_b.png as garm_img
     if selected_body_part == "lower_body":
         garm_img = Image.open("cloth_b.png").convert("RGB")
+        human_mask = None
+        try:
+            human_mask = Image.open("mask_b.png").convert("RGB")
+        except:
+            print("mask_b.png not found")
+            human_mask = None
 
     garm_img = garm_img.resize((768, 1024))
-
-    human_img_orig = dict["background"].convert("RGB")
-
-    if is_checked_crop:
-        width, height = human_img_orig.size
-        target_width = int(min(width, height * (3 / 4)))
-        target_height = int(min(height, width * (4 / 3)))
-        left = (width - target_width) / 2
-        top = (height - target_height) / 2
-        right = (width + target_width) / 2
-        bottom = (height + target_height) / 2
-        cropped_img = human_img_orig.crop((left, top, right, bottom))
-        crop_size = cropped_img.size
-        human_img = cropped_img.resize((768, 1024))
-    else:
-        human_img = human_img_orig.resize((768, 1024))
 
     if is_checked:
         keypoints = openpose_model(human_img.resize((384, 512)))
@@ -198,6 +204,17 @@ def start_tryon(
             mask = Image.fromarray(
                 np.clip(
                     np.array(mask, dtype=np.uint8) - np.array(mask_b, dtype=np.uint8),
+                    0,
+                    255,
+                ).astype(np.uint8)
+            )
+
+        # if selected lower body then or with human_mask
+        if selected_body_part == "lower_body" and human_mask is not None:
+            mask = Image.fromarray(
+                np.clip(
+                    np.array(mask, dtype=np.uint8)
+                    | np.array(human_mask, dtype=np.uint8),
                     0,
                     255,
                 ).astype(np.uint8)
