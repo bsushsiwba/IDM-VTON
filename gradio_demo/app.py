@@ -211,6 +211,7 @@ def start_tryon(
 
         # if selected lower body then or with human_mask
         if selected_body_part == "lower_body" and human_mask is not None:
+            human_mask = human_mask.resize((mask.size[0], mask.size[1]))
             mask = Image.fromarray(
                 np.clip(
                     np.array(mask, dtype=np.uint8)
