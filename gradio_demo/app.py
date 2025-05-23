@@ -225,16 +225,16 @@ def start_tryon(
 
             # go column wise, note first and last white pixel. Fill all pixels in between with white
             mask = np.array(mask)
-            for i in range(mask.shape[0]):
+            for j in range(mask.shape[1]):  # loop through columns
                 first_white = -1
                 last_white = -1
-                for j in range(mask.shape[1]):
+                for i in range(mask.shape[0]):  # loop through rows
                     if mask[i, j] == 255:
                         if first_white == -1:
-                            first_white = j
-                        last_white = j
+                            first_white = i
+                        last_white = i
                 if first_white != -1 and last_white != -1:
-                    mask[i, first_white:last_white] = 255
+                    mask[first_white:last_white, j] = 255
             mask = Image.fromarray(mask)
             mask = mask.convert("L")
         mask = mask.resize((768, 1024))
@@ -243,6 +243,20 @@ def start_tryon(
         mask = pil_to_binary_mask(dict["layers"][0].convert("RGB").resize((768, 1024)))
         # mask = transforms.ToTensor()(mask)
         # mask = mask.unsqueeze(0)
+
+    # get last white pixel in each column, if it is less than 50px from bottom, set all from there to bottom to white
+    mask = np.array(mask)
+    for j in range(mask.shape[1]):  # loop through columns
+        last_white = -1
+        for i in range(mask.shape[0] - 1, -1, -1):  # loop through rows
+            if mask[i, j] == 255:
+                last_white = i
+                break
+        if last_white != -1 and last_white > mask.shape[0] - 50:
+            mask[last_white:, j] = 255
+    mask = Image.fromarray(mask)
+    mask = mask.convert("L")
+
     mask_gray = (1 - transforms.ToTensor()(mask)) * tensor_transfrom(human_img)
     mask_gray = to_pil_image((mask_gray + 1.0) / 2.0)
 
