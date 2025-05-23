@@ -211,6 +211,8 @@ def start_tryon(
 
         # if selected lower body then or with human_mask
         if selected_body_part == "lower_body" and human_mask is not None:
+            # Convert human_mask to grayscale and ensure 2D array
+            human_mask = human_mask.convert("L")
             human_mask = human_mask.resize((mask.size[0], mask.size[1]))
             mask = Image.fromarray(
                 np.clip(
@@ -220,7 +222,23 @@ def start_tryon(
                     255,
                 ).astype(np.uint8)
             )
+
+            # go column wise, note first and last white pixel. Fill all pixels in between with white
+            mask = np.array(mask)
+            for i in range(mask.shape[0]):
+                first_white = -1
+                last_white = -1
+                for j in range(mask.shape[1]):
+                    if mask[i, j] == 255:
+                        if first_white == -1:
+                            first_white = j
+                        last_white = j
+                if first_white != -1 and last_white != -1:
+                    mask[i, first_white:last_white] = 255
+            mask = Image.fromarray(mask)
+            mask = mask.convert("L")
         mask = mask.resize((768, 1024))
+
     else:
         mask = pil_to_binary_mask(dict["layers"][0].convert("RGB").resize((768, 1024)))
         # mask = transforms.ToTensor()(mask)
