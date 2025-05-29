@@ -31,7 +31,41 @@ from detectron2.data.detection_utils import (
 from torchvision.transforms.functional import to_pil_image
 import time
 
+
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
+
+
+import cv2
+import numpy as np
+from PIL import Image
+
+
+def resize_and_center(image, target_width, target_height):
+    img = np.array(image)
+
+    if img.shape[-1] == 4:
+        img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
+    elif len(img.shape) == 2 or img.shape[-1] == 1:
+        img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
+
+    original_height, original_width = img.shape[:2]
+
+    scale = min(target_height / original_height, target_width / original_width)
+    new_height = int(original_height * scale)
+    new_width = int(original_width * scale)
+
+    resized_img = cv2.resize(
+        img, (new_width, new_height), interpolation=cv2.INTER_CUBIC
+    )
+
+    padded_img = np.ones((target_height, target_width, 3), dtype=np.uint8) * 255
+
+    top = (target_height - new_height) // 2
+    left = (target_width - new_width) // 2
+
+    padded_img[top : top + new_height, left : left + new_width] = resized_img
+
+    return Image.fromarray(padded_img)
 
 
 def pil_to_binary_mask(pil_image, threshold=0):
@@ -147,7 +181,8 @@ def start_tryon(
     pipe.unet_encoder.to(device)
 
     garm_img = garm_img.convert("RGB").resize((768, 1024))
-    human_img_orig = dict["background"].convert("RGB")
+    human_img_orig = resize_and_center(dict["background"], 768, 1024)
+    human_img_orig = human_img_orig.convert("RGB")
 
     if is_checked_crop:
         width, height = human_img_orig.size
@@ -198,16 +233,6 @@ def start_tryon(
         mask, mask_gray = get_mask_location(
             "hd", selected_body_part, model_parse, keypoints
         )
-        # if selected upper body then subtract lower mask form upper
-        if selected_body_part == "upper_body":
-            mask_b, _ = get_mask_location("hd", "lower_body", model_parse, keypoints)
-            mask = Image.fromarray(
-                np.clip(
-                    np.array(mask, dtype=np.uint8) - np.array(mask_b, dtype=np.uint8),
-                    0,
-                    255,
-                ).astype(np.uint8)
-            )
 
         # if selected lower body then or with human_mask
         if selected_body_part == "lower_body" and human_mask is not None:
