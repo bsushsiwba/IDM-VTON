@@ -218,6 +218,23 @@ def start_tryon(
     # if lower body is selected, read cloth_b.png as garm_img
     if selected_body_part == "lower_body":
         garm_img = Image.open("cloth_b.png").convert("RGB")
+
+        # process with CatVTON here
+        # save the person and cloth images
+        human_img.save("../CatVTON/person_image.png")
+        garm_img.save("../CatVTON/cloth_image.png")
+
+        # save lower.txt to initiate processing
+        with open("../CatVTON/lower.txt", "w") as f:
+            f.write("process")
+
+        # wait while complete.txt is not created
+        while not os.path.exists("../CatVTON/complete.txt"):
+            time.sleep(0.1)
+
+        # read cat_result.png for person image
+        human_img = Image.open("../CatVTON/cat_result.png").convert("RGB")
+
         human_mask = None
         try:
             human_mask = Image.open("mask_b.png").convert("RGB")
