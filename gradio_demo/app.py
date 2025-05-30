@@ -212,13 +212,8 @@ def start_tryon(
     while not os.path.exists("complete.txt"):
         time.sleep(0.1)
 
-    # read cloth_u.png as garm_img
-    garm_img = Image.open("cloth_u.png").convert("RGB")
-
     # if lower body is selected, read cloth_b.png as garm_img
     if selected_body_part == "lower_body":
-        garm_img = Image.open("cloth_b.png").convert("RGB")
-
         # process with CatVTON here
         # delete all png files in CatVTON directory
         for file in os.listdir("../CatVTON"):
@@ -251,6 +246,8 @@ def start_tryon(
             print("mask_b.png not found")
             human_mask = None
 
+        garm_img = Image.open("cloth_b.png").convert("RGB")
+
     elif selected_body_part == "dresses":
         # process with CatVTON here
         # delete all png files in CatVTON directory
@@ -275,12 +272,11 @@ def start_tryon(
             os.remove("../CatVTON/complete.txt")
 
         # read cat_result.png as final result and return
-        result = Image.open("../CatVTON/cat_result.png").convert("RGB")
-        if is_checked_crop:
-            result = result.resize(crop_size)
-            human_img_orig.paste(result, (int(left), int(top)))
-            return human_img_orig, None
-        return result, None
+        human_img = Image.open("../CatVTON/cat_result.png").convert("RGB")
+        garm_img = Image.open("cloth_u.png").convert("RGB")
+
+    else:
+        garm_img = Image.open("cloth_u.png").convert("RGB")
 
     garm_img = garm_img.resize((768, 1024))
 
