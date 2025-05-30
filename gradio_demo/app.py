@@ -220,6 +220,11 @@ def start_tryon(
         garm_img = Image.open("cloth_b.png").convert("RGB")
 
         # process with CatVTON here
+        # delete all png files in CatVTON directory
+        for file in os.listdir("../CatVTON"):
+            if file.endswith(".png"):
+                os.remove(os.path.join("../CatVTON", file))
+
         # save the person and cloth images
         human_img.save("../CatVTON/person_image.png")
         garm_img.save("../CatVTON/cloth_image.png")
@@ -231,6 +236,10 @@ def start_tryon(
         # wait while complete.txt is not created
         while not os.path.exists("../CatVTON/complete.txt"):
             time.sleep(0.1)
+
+        # delete complete.txt
+        if os.path.exists("../CatVTON/complete.txt"):
+            os.remove("../CatVTON/complete.txt")
 
         # read cat_result.png for person image
         human_img = Image.open("../CatVTON/cat_result.png").convert("RGB")
