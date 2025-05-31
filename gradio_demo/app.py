@@ -199,17 +199,17 @@ def start_tryon(
         human_img = human_img_orig.resize((768, 1024))
 
     # save garment and human image
-    garm_img.save("garment.png")
-    human_img.save("human.png")
+    garm_img.save("../SAM/garment.png")
+    human_img.save("../SAM/human.png")
 
-    if os.path.exists("complete.txt"):
-        os.remove("complete.txt")
+    if os.path.exists("../SAM/complete.txt"):
+        os.remove("../SAM/complete.txt")
 
-    with open("process.txt", "w") as f:
+    with open("../SAM/process.txt", "w") as f:
         f.write("1")
 
     # wait while complete.txt is not created
-    while not os.path.exists("complete.txt"):
+    while not os.path.exists("../SAM/complete.txt"):
         time.sleep(0.1)
 
     # if lower body is selected, read cloth_b.png as garm_img
@@ -241,12 +241,12 @@ def start_tryon(
 
         human_mask = None
         try:
-            human_mask = Image.open("mask_b.png").convert("RGB")
+            human_mask = Image.open("../SAM/mask_b.png").convert("RGB")
         except:
             print("mask_b.png not found")
             human_mask = None
 
-        garm_img = Image.open("cloth_b.png").convert("RGB")
+        garm_img = Image.open("../SAM/cloth_b.png").convert("RGB")
 
     elif selected_body_part == "dresses":
         # process with CatVTON here
@@ -273,10 +273,10 @@ def start_tryon(
 
         # read cat_result.png as final result and return
         human_img = Image.open("../CatVTON/cat_result.png").convert("RGB")
-        garm_img = Image.open("cloth_u.png").convert("RGB")
+        garm_img = Image.open("../SAM/cloth_u.png").convert("RGB")
 
     else:
-        garm_img = Image.open("cloth_u.png").convert("RGB")
+        garm_img = Image.open("../SAM/cloth_u.png").convert("RGB")
 
     garm_img = garm_img.resize((768, 1024))
 
