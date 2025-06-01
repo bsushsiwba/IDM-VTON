@@ -1,6 +1,8 @@
 import sys
-
-sys.path.append("./")
+import base64
+import io
+from fastapi import FastAPI, File, UploadFile, Form
+from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 import gradio as gr
 from src.tryon_pipeline import StableDiffusionXLInpaintPipeline as TryonPipeline
@@ -30,6 +32,7 @@ from detectron2.data.detection_utils import (
 )
 from torchvision.transforms.functional import to_pil_image
 import time
+from fastapi.responses import Response
 
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -539,4 +542,65 @@ with image_blocks as demo:
     )
 
 
-image_blocks.launch(share=True)
+# Initialize FastAPI
+app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.post("/try-on")
+async def try_on_endpoint(
+    person_image: UploadFile = File(...),
+    garment_image: UploadFile = File(...),
+    garment_description: str = Form(...),
+    body_part: str = Form("upper_body"),
+):
+    # Convert uploaded files to PIL images
+    person_img = Image.open(io.BytesIO(await person_image.read()))
+    garment_img = Image.open(io.BytesIO(await garment_image.read()))
+
+    # Create dict structure expected by start_tryon
+    person_dict = {"background": person_img, "layers": None, "composite": None}
+
+    # Use default parameters
+    is_checked = True
+    is_checked_crop = True
+    denoise_steps = 30
+    seed = 42
+
+    # Process images using existing pipeline
+    result_image, mask_image = start_tryon(
+        person_dict,
+        garment_img,
+        garment_description,
+        is_checked,
+        is_checked_crop,
+        denoise_steps,
+        seed,
+        body_part,
+    )
+
+    # Convert PIL image to bytes and return with proper content type
+    img_byte_arr = io.BytesIO()
+    result_image.save(img_byte_arr, format="PNG")
+    img_byte_arr = img_byte_arr.getvalue()
+
+    return Response(content=img_byte_arr, media_type="image/png")
+
+
+# Modified launch to include both Gradio and FastAPI
+import uvicorn
+
+if __name__ == "__main__":
+    # Launch FastAPI
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+else:
+    # Launch Gradio when imported as module
+    image_blocks.launch(share=True)
