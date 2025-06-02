@@ -30,6 +30,7 @@ from detectron2.data.detection_utils import (
 )
 from torchvision.transforms.functional import to_pil_image
 import time
+import threading
 
 
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -538,5 +539,62 @@ with image_blocks as demo:
         api_name="tryon",
     )
 
+
+def process_from_file():
+    valid_types = ["upper_body", "lower_body", "dresses"]
+    while True:
+        if os.path.exists("../process.txt"):
+            try:
+                # Read dress type from process.txt
+                with open("../process.txt", "r") as f:
+                    selected_body_part = f.read().strip()
+
+                # Default to upper_body if empty or invalid
+                if not selected_body_part:
+                    selected_body_part = "upper_body"
+                elif selected_body_part not in valid_types:
+                    raise ValueError(f"Invalid clothing type. Must be one of: {valid_types}")
+
+                # Remove process.txt
+                os.remove("../process.txt")
+
+                # Read images
+                human_img = Image.open("../human.png").convert("RGB")
+                garm_img = Image.open("../garment.png").convert("RGB")
+
+                # Create dummy dict for compatibility
+                dict = {"background": human_img, "layers": [human_img]}
+
+                # Process images using existing pipeline
+                result, _ = start_tryon(
+                    dict,
+                    garm_img,
+                    "",  # Generic description
+                    True,  # is_checked
+                    True,  # is_checked_crop
+                    30,  # denoise_steps
+                    42,  # seed
+                    selected_body_part,
+                )
+
+                # Save result
+                result.save("../result.png")
+
+                # Create complete.txt
+                with open("../complete.txt", "w") as f:
+                    f.write("done")
+
+            except Exception as e:
+                print(f"Error processing files: {e}")
+                # Create complete.txt with error
+                with open("../complete.txt", "w") as f:
+                    f.write(f"error: {str(e)}")
+
+        time.sleep(0.1)  # Check every second
+
+
+# Start file processing thread
+process_thread = threading.Thread(target=process_from_file, daemon=True)
+process_thread.start()
 
 image_blocks.launch(share=True)
